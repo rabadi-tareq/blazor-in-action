@@ -1,0 +1,99 @@
+@page "/cycle-of-life"
+@rendermode InteractiveServer
+
+<PageTitle>Cycle of Life - Blazor Lifecycle Demo</PageTitle>
+
+<h1>Blazor Component Lifecycle</h1>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h3>Lifecycle Events Log</h3>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <button class="btn btn-primary me-2" @onclick="RefreshDataAsync">Refresh Data</button>
+            <button class="btn btn-secondary me-2" @onclick="ToggleChildVisibility">Toggle Child Component</button>
+            <button class="btn btn-warning" @onclick="ClearLog">Clear Log</button>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>Current Phase:</strong> @currentPhase
+        </div>
+
+        <div class="log-container" style="max-height: 300px; overflow-y: auto; background: #f8f9fa; padding: 1rem; border-radius: 4px;">
+            @foreach (var log in lifecycleLog)
+            {
+                <div class="mb-1">
+                    <span class="badge bg-secondary">@log.Timestamp.ToString("HH:mm:ss.fff")</span>
+                    <strong>@log.Phase:</strong> @log.Message
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>User Data</h4>
+            </div>
+            <div class="card-body">
+                @if (isLoading)
+                {
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-2">Loading user data...</span>
+                }
+                else if (userData is not null)
+                {
+                    <dl class="row">
+                        <dt class="col-sm-4">Name:</dt>
+                        <dd class="col-sm-8">@userData.Name</dd>
+
+                        <dt class="col-sm-4">Email:</dt>
+                        <dd class="col-sm-8">@userData.Email</dd>
+
+                        <dt class="col-sm-4">Last Updated:</dt>
+                        <dd class="col-sm-8">@userData.LastUpdated.ToString("g")</dd>
+                    </dl>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h4>Render Statistics</h4>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-6">Render Count:</dt>
+                    <dd class="col-sm-6">@renderCount</dd>
+
+                    <dt class="col-sm-6">Parameters Set Count:</dt>
+                    <dd class="col-sm-6">@parametersSetCount</dd>
+
+                    <dt class="col-sm-6">After Render Count:</dt>
+                    <dd class="col-sm-6">@afterRenderCount</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (showChildComponent)
+{
+    <div class="card">
+        <div class="card-header">
+            <h4>Child Component (demonstrates parent-child lifecycle)</h4>
+        </div>
+        <div class="card-body">
+            <CycleOfLifeChild 
+                ParentMessage="@($"Parent updated at {DateTime.Now:HH:mm:ss}")"
+                OnChildEvent="HandleChildEvent" />
+        </div>
+    </div>
+}
