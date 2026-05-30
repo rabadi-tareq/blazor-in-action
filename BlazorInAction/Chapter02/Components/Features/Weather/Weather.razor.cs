@@ -1,6 +1,6 @@
 namespace Chapter02.Components.Features.Weather;
 
-public partial class Weather
+public partial class WeatherPage
 {
     private WeatherForecast[]? forecasts;
 
