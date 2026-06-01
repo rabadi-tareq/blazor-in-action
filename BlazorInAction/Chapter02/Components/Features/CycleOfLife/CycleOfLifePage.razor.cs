@@ -6,8 +6,11 @@ namespace Chapter02.Components.Features.CycleOfLife;
 public partial class CycleOfLifePage : IAsyncDisposable
 {
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
-    private List<LifecycleLogEntry> lifecycleLog = new List<LifecycleLogEntry>();
+
+    private readonly List<LifecycleLogEntry> lifecycleLog = new List<LifecycleLogEntry>();
+
     private UserData? userData;
+
     private bool isLoading = true;
     private bool showChildComponent;
     private string currentPhase = "Initializing";
@@ -33,16 +36,24 @@ public partial class CycleOfLifePage : IAsyncDisposable
     /// <summary>
     /// Phase 2: SetParametersAsync - Called when parameters are set from parent.
     /// Used for: Custom parameter handling, early validation.
+    /// Can't access cascading parameters here in ParameterView, they're only available in OnParametersSet
     /// </summary>
-    public override async Task SetParametersAsync(ParameterView parameters)
+
+    public override Task SetParametersAsync(ParameterView parameters)
     {
-        LogLifecycleEvent("SetParametersAsync", $"Setting parameters (Count: {++parametersSetCount})");
+        // 1. Runs BEFORE the framework processes the parameters
+        LogLifecycleEvent("SetParametersAsync", $"Setting parameters (Count: {++parametersSetCount})", "pink");
 
-        // Custom parameter processing can happen here before calling base
-        await base.SetParametersAsync(parameters);
+        // 2. Execute the base framework logic synchronously and capture its completed task
+        Task result = base.SetParametersAsync(parameters);
 
+        // 3. Runs AFTER the parameters have been fully mapped to your properties
         LogLifecycleEvent("SetParametersAsync", "Parameters set complete");
+
+        // 4. Return the completed task directly back to the Blazor rendering engine
+        return result;
     }
+
 
     /// <summary>
     /// Phase 3: OnInitialized - Called once when component is initialized.
@@ -94,6 +105,7 @@ public partial class CycleOfLifePage : IAsyncDisposable
     /// <summary>
     /// Phase 5: OnParametersSet - Called after parameters are set.
     /// Used for: Reacting to parameter changes with synchronous logic.
+    /// Here is where cascading parameters are set
     /// </summary>
     protected override void OnParametersSet()
     {
@@ -229,13 +241,14 @@ public partial class CycleOfLifePage : IAsyncDisposable
         LogLifecycleEvent("ClearLog", "Log cleared");
     }
 
-    private void LogLifecycleEvent(string phase, string message)
+    private void LogLifecycleEvent(string phase, string message, string? color = "white")
     {
         lifecycleLog.Add(new LifecycleLogEntry
         {
             Phase = phase,
             Message = message,
-            Timestamp = DateTime.Now
+            Timestamp = DateTime.Now,
+            Color = color
         });
 
         // Keep log size manageable
@@ -285,19 +298,5 @@ public partial class CycleOfLifePage : IAsyncDisposable
         {
             LogLifecycleEvent("DisposeAsync", $"Disposal error: {ex.Message}");
         }
-    }
-
-    private record LifecycleLogEntry
-    {
-        public required string Phase { get; init; }
-        public required string Message { get; init; }
-        public DateTime Timestamp { get; init; }
-    }
-
-    private class UserData
-    {
-        public required string Name { get; set; }
-        public required string Email { get; set; }
-        public DateTime LastUpdated { get; set; }
     }
 }

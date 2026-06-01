@@ -25,7 +25,8 @@
             {
                 <div class="mb-1">
                     <span class="badge bg-secondary">@log.Timestamp.ToString("HH:mm:ss.fff")</span>
-                    <strong>@log.Phase:</strong> @log.Message
+                    <strong>@log.Phase:</strong> 
+                    <span style="background-color: @log.Color">@log.Message</span>
                 </div>
             }
         </div>
